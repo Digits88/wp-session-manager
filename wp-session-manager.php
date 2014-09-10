@@ -33,7 +33,7 @@ class WP_Session_Manager {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 		// Profile options.
-		add_action( 'admin_print_styles-profile.php',  array( $this, 'admin_print_styles'            ) );
+		add_action( 'admin_head-profile.php',          array( $this, 'enqueue_scripts_styles'        ) );
 		add_action( 'profile_personal_options',        array( $this, 'user_options_display'          ) );
 
 		// Attach extra session information.
@@ -42,28 +42,20 @@ class WP_Session_Manager {
 		// AJAX actions for destroying sessions.
 		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'destroy_multiple_sessions'     ) );
 		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'destroy_single_session'        ) );
-		add_action( 'admin_print_scripts-profile.php', array( $this, 'admin_print_scripts'           ) );
 	}
 
 	/**
-	 * Print the admin-options stylesheet on profile.php.
+	 * Enqueue scripts and styles for the profile.php screen.
 	 *
 	 * @since 1.0
 	 *
 	 * @access public
 	 */
-	public function admin_print_styles() {
+	public function enqueue_scripts_styles() {
+		// Styles.
 		wp_enqueue_style( 'wpsm-options', plugins_url( 'css/profile-options.css' ), array(), '20140909' );
-	}
 
-	/**
-	 * Print the admin-options script on profile.php.
-	 *
-	 * @since 1.0
-	 *
-	 * @access public
-	 */
-	public function admin_print_scripts() {
+		// Script.
 		wp_enqueue_script( 'wpsm-options', plugins_url( 'js/profile-options.js' ), array( 'jquery' ), '20140909' );
 	}
 
