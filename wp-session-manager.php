@@ -40,7 +40,7 @@ class WP_Session_Manager {
 		add_filter( 'attach_session_information',      array( $this, 'filter_collected_session_info' ) );
 
 		// AJAX actions for destroying sessions.
-		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'destroy_all_sessions'          ) );
+		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'destroy_multiple_sessions'     ) );
 		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'destroy_single_session'        ) );
 		add_action( 'admin_print_scripts-profile.php', array( $this, 'admin_print_scripts'           ) );
 	}
@@ -148,13 +148,13 @@ class WP_Session_Manager {
 	}
 
 	/**
-	 * AJAX handler for destroying all 'other' open sessions for the current user.
+	 * AJAX handler for destroying multiple open sessions for the current user.
 	 *
 	 * @since 1.0
 	 *
 	 * @access public
 	 */
-	public function destroy_all_sessions() {
+	public function destroy_multiple_sessions() {
 
 	}
 
