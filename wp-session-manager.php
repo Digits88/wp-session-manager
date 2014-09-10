@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: End User Sessions
- * Author: Drew Jaynes
+ * Plugin Name: WP Session Manager
+ * Author: Drew Jaynes & John Blackbourn
  * Description: Adds controls to a user's profile screen for managing their logged-in sessions.
  * Version: 1.0
  * License: GPLv2
