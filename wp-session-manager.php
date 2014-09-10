@@ -65,7 +65,7 @@ class WP_Session_Manager {
 				<th scope="row"><?php _e( 'Login Activity', 'wpsm' ); ?></th>
 				<td>
 					<?php
-					$count = count( $session->get_all() );
+					$count = count( $this->session->get_all() );
 					if ( $count > 1 ) :
 						$nooped = _n_noop(
 							'You&#8217;re logged-in to %s other location:',
@@ -80,9 +80,8 @@ class WP_Session_Manager {
 								<th><?php _e( 'Access Type', 'wpsm' ); ?></th>
 								<th><?php _e( 'Location', 'wpsm' ); ?></th>
 							</tr>
-							<?php foreach ( $session->get_all() as $session ) :
+							<?php foreach ( $this->session->get_all() as $session ) :
 								$browser = get_browser( $session['user-agent'], true );
-								var_dump( $browser );
 								?>
 								<tr>
 									<td><?php echo $browser['parent']; ?></td>
