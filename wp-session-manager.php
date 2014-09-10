@@ -57,24 +57,28 @@ class WP_Session_Manager {
 	 * @param WP_User $user WP_User object for the current user.
 	 */
 	public function user_options_display( $user ) {
-		$session = WP_Session_Tokens::get_instance( $user->ID );
-
+		$this->session = WP_Session_Tokens::get_instance( $user->ID );
 		?>
 		<table class="form-table">
 			<tbody>
 			<tr>
-				<th scope="row"><?php _e( 'Login Activity', 'eus' ); ?></th>
+				<th scope="row"><?php _e( 'Login Activity', 'wpsm' ); ?></th>
 				<td>
 					<?php
 					$count = count( $session->get_all() );
-					if ( $count > 1 ) {
-						echo 'You&#8217;re logged-in to ' . sprintf( translate_nooped_plural( _n_noop( '%s other location:', '%s other locations:', 'eus' ), $count, 'eus' ), number_format_i18n( $count ) );
+					if ( $count > 1 ) :
+						$nooped = _n_noop(
+							'You&#8217;re logged-in to %s other location:',
+							'You&#8217;re logged-in to %s other locations:',
+							'wpsm'
+						);
+						printf( translate_nooped_plural( $nooped, $count, 'wpsm' ), number_format_i18n( $count ) );
 						?>
-						<table class="sessions-table" style="width:400px;">
+						<table class="sessions-table">
 							<tbody>
 							<tr>
-								<th><?php _e( 'Access Type', 'eus' ); ?></th>
-								<th><?php _e( 'Location', 'eus' ); ?></th>
+								<th><?php _e( 'Access Type', 'wpsm' ); ?></th>
+								<th><?php _e( 'Location', 'wpsm' ); ?></th>
 							</tr>
 							<?php foreach ( $session->get_all() as $session ) :
 								$browser = get_browser( $session['user-agent'], true );
@@ -87,13 +91,9 @@ class WP_Session_Manager {
 							<?php endforeach; ?>
 							</tbody>
 						</table>
-					<?php
-					} else {
-						echo 'Something';
-					}
-					?>
+					<?php endif; // $count > 1 ?>
 					<br />
-					<a href="" class="button button-secondary"><?php _e( 'Sign Out of All Other Sessions', 'eus' ); ?></a>
+					<a href="" class="button button-secondary"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a>
 				</td>
 			</tr>
 			</tbody>
