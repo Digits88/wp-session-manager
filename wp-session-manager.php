@@ -29,10 +29,14 @@ class WP_Session_Manager {
 	 * @access public
 	 */
 	public function __construct() {
+		// Textdomain.
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
+		// Profile options.
 		add_action( 'admin_print_styles-profile.php', array( $this, 'admin_print_styles' ) );
 		add_action( 'profile_personal_options',       array( $this, 'user_options_display'          ) );
+
+		// Attach extra session information.
 		add_filter( 'attach_session_information',     array( $this, 'filter_collected_session_info' ) );
 	}
 
