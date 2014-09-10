@@ -7,12 +7,49 @@
  * License: GPLv2
  */
 
-function setup_sessions( $user ) {
-	$session = WP_Session_Tokens::get_instance( $user->ID );
+/**
+ * Class WP_Session_Manager
+ *
+ * @since 1.0
+ */
+class WP_Session_Manager {
 
-	?>
-	<table class="form-table">
-		<tbody>
+	/**
+	 * Current session.
+	 *
+	 * @since 1.0
+	 * @access public
+	 * @var WP_Session_Tokens
+	 */
+	public $session;
+
+	/**
+	 * Constructor.
+	 *
+	 * @access public
+	 */
+	public function __construct() {
+		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+
+		add_action( 'profile_personal_options',   array( $this, 'user_options_display'          ) );
+		add_filter( 'attach_session_information', array( $this, 'filter_collected_session_info' ) );
+	}
+
+	/**
+	 * Handle outputting the session manager options to the user profile screen.
+	 *
+	 * @since 1.0
+	 *
+	 * @access public
+	 *
+	 * @param WP_User $user WP_User object for the current user.
+	 */
+	public function user_options_display( $user ) {
+		$session = WP_Session_Tokens::get_instance( $user->ID );
+
+		?>
+		<table class="form-table">
+			<tbody>
 			<tr>
 				<th scope="row"><?php _e( 'Login Activity', 'eus' ); ?></th>
 				<td>
@@ -37,22 +74,22 @@ function setup_sessions( $user ) {
 						</style>
 						<table class="sessions-table" style="width:400px;">
 							<tbody>
+							<tr>
+								<th><?php _e( 'Access Type', 'eus' ); ?></th>
+								<th><?php _e( 'Location', 'eus' ); ?></th>
+							</tr>
+							<?php foreach ( $session->get_all() as $session ) :
+								$browser = get_browser( $session['user-agent'], true );
+								var_dump( $browser );
+								?>
 								<tr>
-									<th><?php _e( 'Access Type', 'eus' ); ?></th>
-									<th><?php _e( 'Location', 'eus' ); ?></th>
+									<td><?php echo $browser['parent']; ?></td>
+									<td><?php echo $session['ip-address']; ?></td>
 								</tr>
-								<?php foreach ( $session->get_all() as $session ) :
-									$browser = get_browser( $session['user-agent'], true );
-									var_dump( $browser );
-									?>
-									<tr>
-										<td><?php echo $browser['parent']; ?></td>
-										<td><?php echo $session['ip-address']; ?></td>
-									</tr>
-								<?php endforeach; ?>
+							<?php endforeach; ?>
 							</tbody>
 						</table>
-						<?php
+					<?php
 					} else {
 						echo 'Something';
 					}
@@ -61,24 +98,37 @@ function setup_sessions( $user ) {
 					<a href="" class="button button-secondary"><?php _e( 'Sign Out of All Other Sessions', 'eus' ); ?></a>
 				</td>
 			</tr>
-		</tbody>
-	</table>
-	<?php
-}
-add_action( 'profile_personal_options', 'setup_sessions' );
-
-function ww_filter_session_information( $info ) {
-	if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-		$info['ip-address'] = $_SERVER['HTTP_CLIENT_IP'];
-	} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-		$info['ip-address'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	} else {
-		$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
+			</tbody>
+		</table>
+		<?php
 	}
 
-	if ( ! empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
-		$info['user-agent'] = $_SERVER['HTTP_USER_AGENT'];
+	/**
+	 * Collect and store additional session information.
+	 *
+	 * @since 1.0
+	 *
+	 * @access public
+	 *
+	 * @param array $info Array of session information.
+	 * @return array Filtered session information array.
+	 */
+	public function filter_collected_session_info( $info ) {
+		// IP address.
+		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+			$info['ip-address'] = $_SERVER['HTTP_CLIENT_IP'];
+		} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+			$info['ip-address'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		} else {
+			$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
+		}
+
+		// User-agent.
+		if ( ! empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
+			$info['user-agent'] = $_SERVER['HTTP_USER_AGENT'];
+		}
+		return $info;
 	}
-	return $info;
 }
-add_filter( 'attach_session_information', 'ww_filter_session_information' );
+
+$wp_session_manager = new WP_Session_Manager();
