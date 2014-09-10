@@ -31,8 +31,20 @@ class WP_Session_Manager {
 	public function __construct() {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
-		add_action( 'profile_personal_options',   array( $this, 'user_options_display'          ) );
-		add_filter( 'attach_session_information', array( $this, 'filter_collected_session_info' ) );
+		add_action( 'admin_print_styles-profile.php', array( $this, 'admin_print_styles' ) );
+		add_action( 'profile_personal_options',       array( $this, 'user_options_display'          ) );
+		add_filter( 'attach_session_information',     array( $this, 'filter_collected_session_info' ) );
+	}
+
+	/**
+	 * Print the admin-options stylesheet on profile.php.
+	 *
+	 * @since 1.0
+	 *
+	 * @access public
+	 */
+	public function admin_print_styles() {
+		wp_enqueue_style( 'wpsm-options', plugins_url( 'css/profile-options.css' ), array(), '20140909' );
 	}
 
 	/**
@@ -58,20 +70,6 @@ class WP_Session_Manager {
 					if ( $count > 1 ) {
 						echo 'You&#8217;re logged-in to ' . sprintf( translate_nooped_plural( _n_noop( '%s other location:', '%s other locations:', 'eus' ), $count, 'eus' ), number_format_i18n( $count ) );
 						?>
-						<style type="text/css">
-							.sessions-table {
-								margin-top: 20px;
-							}
-							.sessions-table,
-							.sessions-table td,
-							.sessions-table th {
-								border: 1px solid #222;
-							}
-							.sessions-table td,
-							.sessions-table th {
-								padding: 2px;
-							}
-						</style>
 						<table class="sessions-table" style="width:400px;">
 							<tbody>
 							<tr>

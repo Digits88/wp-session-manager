@@ -1,0 +1,14 @@
+/* Profile Options CSS */
+
+.sessions-table {
+	margin-top: 20px;
+}
+.sessions-table,
+.sessions-table td,
+.sessions-table th {
+	border: 1px solid #222;
+}
+.sessions-table td,
+.sessions-table th {
+	padding: 2px;
+}
