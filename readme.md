@@ -1,4 +1,4 @@
-# End User Sessions #
+# WP Session Manager #
 
 **Contributors:** DrewAPicture, johnbillion  
 **Tags:** users, sessions  
