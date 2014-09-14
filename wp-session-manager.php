@@ -18,10 +18,13 @@ class WP_Session_Manager {
 	 * Current session.
 	 *
 	 * @since 1.0
-	 * @access public
+	 * @access protected
 	 * @var WP_Session_Tokens
 	 */
-	public $session;
+	protected $session;
+
+	protected $bc = null;
+	protected $bc_cache = array();
 
 	/**
 	 * Constructor.
@@ -91,18 +94,34 @@ class WP_Session_Manager {
 						);
 						printf( translate_nooped_plural( $nooped, $count, 'wpsm' ), number_format_i18n( $count ) );
 						?>
-						<table class="sessions-table">
-							<tbody>
+						<table class="widefat sessions-table">
+							<thead>
 							<tr>
-								<th><?php _e( 'Access Type', 'wpsm' ); ?></th>
-								<th><?php _e( 'Location', 'wpsm' ); ?></th>
+								<th scope="col" colspan="2"><?php _e( 'Access Type', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
 							</tr>
+							</thead>
+							<tbody>
 							<?php foreach ( $this->session->get_all() as $session ) :
-								$browser = get_browser( $session['user-agent'], true );
+								$browser = $this->get_browser( $session );
+								$ip = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
+								$started = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
+								$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
 								?>
 								<tr>
-									<td><?php echo $browser['parent']; ?></td>
-									<td><?php echo $session['ip-address']; ?></td>
+									<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
+									<td><?php
+										if ( $browser ) {
+											printf( __( '%1$s on %2$s %3$s', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
+										} else {
+											_e( 'Unknown', 'wpsm' );
+										}
+									?></td>
+									<td><?php echo $ip; ?></td>
+									<td><?php echo $started; ?></td>
+									<td><?php echo $expiration; ?></td>
 								</tr>
 							<?php endforeach; ?>
 							</tbody>
@@ -115,6 +134,41 @@ class WP_Session_Manager {
 			</tbody>
 		</table>
 		<?php
+	}
+
+	public function device_class( array $browser ) {
+		if ( !$browser ) {
+			return null;
+		}
+		if ( $browser['ismobiledevice'] ) {
+			$class = 'smartphone';
+		} else if ( $browser['istablet'] ) {
+			$class = 'tablet';
+		} else {
+			$class = 'desktop';
+		}
+		return 'dashicons dashicons-' . $class;
+	}
+
+	public function get_browser( array $session ) {
+
+		if ( !isset( $session['user-agent'] ) or empty( $session['user-agent'] ) ) {
+			return array();
+		}
+
+		if ( isset( $this->bc_cache[$session['user-agent']] ) ) {
+			return $this->bc_cache[$session['user-agent']];
+		}
+
+		if ( !isset( $this->bc ) ) {
+			$bc = dirname( __FILE__ ) . '/browscap';
+			require_once $bc . '/Browscap.php';
+			$this->bc = new Browscap( $bc );
+			$this->bc->lowercase = true;
+		}
+
+		return $this->bc_cache[$session['user-agent']] = $this->bc->getBrowser( $session['user-agent'], true );
+
 	}
 
 	/**
