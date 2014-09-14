@@ -26,9 +26,9 @@ class WP_Session_Manager {
 	/**
 	 * Constructor.
 	 *
-	 * @access public
+	 * @access private
 	 */
-	public function __construct() {
+	private function __construct() {
 		// Textdomain.
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
@@ -159,7 +159,26 @@ class WP_Session_Manager {
 	 */
 	public function destroy_single_session() {
 
+	/**
+	 * Singleton getter.
+	 *
+	 * @since 1.0
+	 *
+	 * @access public
+	 *
+	 * @return WP_Session_Manager Our WP_Session_Manager instance.
+	 */
+	public static function init() {
+		static $instance = null;
+
+		if ( ! $instance ) {
+			$instance = new WP_Session_Manager;
+		}
+
+		return $instance;
+
 	}
 
 }
-$wp_session_manager = new WP_Session_Manager();
+
+WP_Session_Manager::init();
