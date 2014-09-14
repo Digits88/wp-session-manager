@@ -127,20 +127,18 @@ class WP_Session_Manager {
 	 * @param array $info Array of session information.
 	 * @return array Filtered session information array.
 	 */
-	public function filter_collected_session_info( $info ) {
+	public function filter_collected_session_info( array $info ) {
 		// IP address.
-		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$info['ip-address'] = $_SERVER['HTTP_CLIENT_IP'];
-		} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			$info['ip-address'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		} else {
-			$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
-		}
+		$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
 
 		// User-agent.
 		if ( ! empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
-			$info['user-agent'] = $_SERVER['HTTP_USER_AGENT'];
+			$info['user-agent'] = wp_unslash( $_SERVER['HTTP_USER_AGENT'] );
 		}
+
+		// Timestamp
+		$info['started'] = time();
+
 		return $info;
 	}
 
