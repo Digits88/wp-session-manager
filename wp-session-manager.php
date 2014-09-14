@@ -19,9 +19,9 @@ class WP_Session_Manager {
 	 *
 	 * @since 1.0
 	 * @access protected
-	 * @var WP_Session_Tokens
+	 * @var WP_Session_Tokens[]
 	 */
-	protected $session;
+	protected $session = array();
 
 	protected $bc = null;
 	protected $bc_cache = array();
@@ -77,7 +77,7 @@ class WP_Session_Manager {
 	 * @param WP_User $user WP_User object for the current user.
 	 */
 	public function user_options_display( WP_User $user ) {
-		$this->session = WP_Session_Tokens::get_instance( $user->ID );
+		$user_session = $this->get_sessions( $user );
 		?>
 		<table class="form-table">
 			<tbody>
@@ -85,7 +85,7 @@ class WP_Session_Manager {
 				<th scope="row"><?php _e( 'Login Activity', 'wpsm' ); ?></th>
 				<td>
 					<?php
-					$count = count( $this->session->get_all() );
+					$count = count( $user_session->get_all() );
 					if ( $count > 1 ) :
 						printf( __( 'You&#8217;re logged in to %s other locations:', 'wpsm' ),
 							number_format_i18n( $count )
@@ -101,7 +101,7 @@ class WP_Session_Manager {
 							</tr>
 							</thead>
 							<tbody>
-							<?php foreach ( $this->session->get_all() as $session ) :
+							<?php foreach ( $user_session->get_all() as $session ) :
 								$browser = $this->get_browser( $session );
 								$ip = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 								$started = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
@@ -191,6 +191,25 @@ class WP_Session_Manager {
 		$info['started'] = time();
 
 		return $info;
+	}
+
+	/**
+	 * Get a session object for the given user.
+	 *
+	 * @since 1.0
+	 *
+	 * @access protected
+	 *
+	 * @param  WP_User $user A WP_User object.
+	 * @return WP_Session_Tokens The WP_Session_Tokens object for the user.
+	 */
+	protected function get_sessions( WP_User $user ) {
+
+		if ( isset( $this->session[$user->ID] ) ) {
+			return $this->session[$user->ID];
+		}
+
+		return $this->session[$user->ID] = WP_Session_Tokens::get_instance( $user->ID );
 	}
 
 	/**
