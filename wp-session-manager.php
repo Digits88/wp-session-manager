@@ -30,7 +30,7 @@ class WP_Session_Manager {
 	 */
 	private function __construct() {
 		// Textdomain.
-		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		add_action( 'init',                            array( $this, 'action_init'                   ) );
 
 		// Profile options.
 		add_action( 'admin_head-profile.php',          array( $this, 'enqueue_scripts_styles'        ) );
@@ -42,6 +42,10 @@ class WP_Session_Manager {
 		// AJAX actions for destroying sessions.
 		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'destroy_multiple_sessions'     ) );
 		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'destroy_single_session'        ) );
+	}
+
+	public function action_init() {
+		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
 
 	/**
