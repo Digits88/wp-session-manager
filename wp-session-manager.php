@@ -87,12 +87,9 @@ class WP_Session_Manager {
 					<?php
 					$count = count( $this->session->get_all() );
 					if ( $count > 1 ) :
-						$nooped = _n_noop(
-							'You&#8217;re logged-in to %s other location:',
-							'You&#8217;re logged-in to %s other locations:',
-							'wpsm'
+						printf( __( 'You&#8217;re logged in to %s other locations:', 'wpsm' ),
+							number_format_i18n( $count )
 						);
-						printf( translate_nooped_plural( $nooped, $count, 'wpsm' ), number_format_i18n( $count ) );
 						?>
 						<table class="widefat sessions-table">
 							<thead>
