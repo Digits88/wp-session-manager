@@ -34,7 +34,8 @@ class WP_Session_Manager {
 
 		// Profile options.
 		add_action( 'admin_head-profile.php',          array( $this, 'enqueue_scripts_styles'        ) );
-		add_action( 'profile_personal_options',        array( $this, 'user_options_display'          ) );
+		add_action( 'admin_head-user-edit.php',        array( $this, 'enqueue_scripts_styles'        ) );
+		add_action( 'personal_options',                array( $this, 'user_options_display'          ) );
 
 		// Attach extra session information.
 		add_filter( 'attach_session_information',      array( $this, 'filter_collected_session_info' ) );
@@ -72,7 +73,7 @@ class WP_Session_Manager {
 	 *
 	 * @param WP_User $user WP_User object for the current user.
 	 */
-	public function user_options_display( $user ) {
+	public function user_options_display( WP_User $user ) {
 		$this->session = WP_Session_Tokens::get_instance( $user->ID );
 		?>
 		<table class="form-table">
