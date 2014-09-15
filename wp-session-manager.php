@@ -109,10 +109,11 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+								<th scope="col">&nbsp;</th>
 							</tr>
 							</thead>
 							<tbody>
-								<?php $this->user_session_row( $current_session ); ?>
+								<?php $this->user_session_row( $current_session, false ); ?>
 							</tbody>
 						</table>
 						<?php
@@ -136,6 +137,7 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+								<th scope="col"><span class="screen-reader-text"><?php _e( 'Sign Out', 'wpsm' ); ?></span></th>
 							</tr>
 							</thead>
 							<tbody>
@@ -159,24 +161,29 @@ class WP_Session_Manager {
 		<?php
 	}
 
-	private function user_session_row( array $session ) {
+	private function user_session_row( array $session, $show_sign_out = true ) {
 		$browser    = $this->get_browser( $session );
 		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
 		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
 		?>
 		<tr>
-			<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
-			<td><?php
+			<td class="col-device"><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
+			<td class="col-browser"><?php
 				if ( $browser ) {
 					printf( __( '%1$s<br><span class="description">on %2$s %3$s</span>', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
 				} else {
 					_e( 'Unknown', 'wpsm' );
 				}
 			?></td>
-			<td><?php echo $ip; ?></td>
-			<td><?php echo $started; ?></td>
-			<td><?php echo $expiration; ?></td>
+			<td class="col-ip"><?php echo $ip; ?></td>
+			<td class="col-started"><?php echo $started; ?></td>
+			<td class="col-expiration"><?php echo $expiration; ?></td>
+			<?php if ( $show_sign_out ) { ?>
+				<td class="col-signout"><a href="#" class="button"><?php _e( 'Sign Out', 'wpsm' ); ?></a></td>
+			<?php } else { ?>
+				<td class="col-signout">&nbsp;</td>
+			<?php } ?>
 		</tr>
 		<?php
 	}

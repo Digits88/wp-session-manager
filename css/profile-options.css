@@ -8,6 +8,16 @@
 .sessions-table td {
 	padding: 10px;
 	vertical-align: top;
+	width: auto;
+}
+
+.sessions-table td.col-device {
+	width: 20px;
+	padding-right: 0;
+}
+
+.sessions-table td.col-signout {
+	width: 80px;
 }
 
 .sessions-table .description {
