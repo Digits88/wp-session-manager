@@ -42,6 +42,7 @@ class WP_Session_Manager {
 
 		// Attach extra session information.
 		add_filter( 'attach_session_information',      array( $this, 'filter_collected_session_info' ) );
+		add_filter( 'session_token_manager',           array( $this, 'filter_session_token_manager'  ) );
 
 		// AJAX actions for destroying sessions.
 		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'destroy_multiple_sessions'     ) );
@@ -50,6 +51,10 @@ class WP_Session_Manager {
 
 	public function action_init() {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	}
+
+	public function filter_session_token_manager( $manager ) {
+		return 'WP_Session_Manager_User_Meta_Session_Tokens';
 	}
 
 	/**
@@ -250,6 +255,27 @@ class WP_Session_Manager {
 
 		return $instance;
 
+	}
+
+}
+
+class WP_Session_Manager_User_Meta_Session_Tokens extends WP_User_Meta_Session_Tokens {
+
+	public function get_all_keyed() {
+		return $this->get_sessions();
+	}
+
+	public function public_hash_token( $token ) {
+		return hash( 'sha256', $token );
+	}
+
+	public function get_other_sessions( $token ) {
+		$all     = $this->get_all_keyed();
+		$current = $this->public_hash_token( $token );
+
+		unset( $all[$current] );
+
+		return $all;
 	}
 
 }
