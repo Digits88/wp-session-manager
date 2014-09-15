@@ -82,7 +82,16 @@ class WP_Session_Manager {
 	 * @param WP_User $user WP_User object for the current user.
 	 */
 	public function user_options_display( WP_User $user ) {
-		$user_session = $this->get_sessions( $user );
+		$sessions = $this->get_sessions( $user );
+
+		if ( $user->ID == get_current_user_id() ) {
+			$token           = wp_get_session_token();
+			$other_sessions  = $sessions->get_other_sessions( $token );
+			$current_session = $sessions->get( $token );
+		} else {
+			$other_sessions  = $sessions->get_all();
+		}
+
 		?>
 		<table class="form-table">
 			<tbody>
@@ -90,11 +99,8 @@ class WP_Session_Manager {
 				<th scope="row"><?php _e( 'Login Activity', 'wpsm' ); ?></th>
 				<td>
 					<?php
-					$count = count( $user_session->get_all() );
-					if ( $count > 1 ) :
-						printf( __( 'You&#8217;re logged in to %s other locations:', 'wpsm' ),
-							number_format_i18n( $count )
-						);
+					if ( $user->ID == get_current_user_id() ) {
+						echo '<p>' . __( 'Current session:', 'wpsm' ) . '</p>';
 						?>
 						<table class="widefat sessions-table">
 							<thead>
@@ -106,7 +112,8 @@ class WP_Session_Manager {
 							</tr>
 							</thead>
 							<tbody>
-							<?php foreach ( $user_session->get_all() as $session ) :
+							<?php
+								$session = $current_session;
 								$browser = $this->get_browser( $session );
 								$ip = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 								$started = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
@@ -116,7 +123,52 @@ class WP_Session_Manager {
 									<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
 									<td><?php
 										if ( $browser ) {
-											printf( __( '%1$s on %2$s %3$s', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
+											printf( __( '%1$s<br><span class="description">on %2$s %3$s</span>', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
+										} else {
+											_e( 'Unknown', 'wpsm' );
+										}
+									?></td>
+									<td><?php echo $ip; ?></td>
+									<td><?php echo $started; ?></td>
+									<td><?php echo $expiration; ?></td>
+								</tr>
+							</tbody>
+						</table>
+						<?php
+					}
+					$count = count( $other_sessions );
+					if ( $count > 0 ) :
+						if ( $user->ID == get_current_user_id() ) {
+							echo '<p>' . sprintf( _n( 'You&#8217;re logged in to %s other location:', 'You&#8217;re logged in to %s other locations:', $count, 'wpsm' ),
+								number_format_i18n( $count )
+							) . '</p>';
+						} else {
+							echo '<p>' . sprintf( _n( 'Logged in to %s location:', 'Logged in to %s locations:', $count, 'wpsm' ),
+								number_format_i18n( $count )
+							) . '</p>';
+						}
+						?>
+						<table class="widefat sessions-table">
+							<thead>
+							<tr>
+								<th scope="col" colspan="2"><?php _e( 'Access Type', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+							</tr>
+							</thead>
+							<tbody>
+							<?php foreach ( $other_sessions as $session ) :
+								$browser = $this->get_browser( $session );
+								$ip = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
+								$started = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
+								$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
+								?>
+								<tr>
+									<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
+									<td><?php
+										if ( $browser ) {
+											printf( __( '%1$s<br><span class="description">on %2$s %3$s</span>', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
 										} else {
 											_e( 'Unknown', 'wpsm' );
 										}
@@ -128,9 +180,14 @@ class WP_Session_Manager {
 							<?php endforeach; ?>
 							</tbody>
 						</table>
+						<?php if ( $user->ID == get_current_user_id() ) { ?>
+							<p><a href="#" class="button button-secondary hide-if-no-js"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a></p>
+						<?php } else { ?>
+							<p><a href="#" class="button button-secondary hide-if-no-js"><?php _e( 'Sign Out of All Sessions', 'wpsm' ); ?></a></p>
+						<?php } ?>
+					<?php elseif ( $user->ID != get_current_user_id() ): ?>
+						<?php _e( 'Not currently logged in', 'wpsm' ); ?>
 					<?php endif; // $count > 1 ?>
-					<br />
-					<a href="" class="button button-secondary"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a>
 				</td>
 			</tr>
 			</tbody>
