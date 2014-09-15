@@ -112,26 +112,7 @@ class WP_Session_Manager {
 							</tr>
 							</thead>
 							<tbody>
-							<?php
-								$session = $current_session;
-								$browser = $this->get_browser( $session );
-								$ip = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
-								$started = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
-								$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
-								?>
-								<tr>
-									<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
-									<td><?php
-										if ( $browser ) {
-											printf( __( '%1$s<br><span class="description">on %2$s %3$s</span>', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
-										} else {
-											_e( 'Unknown', 'wpsm' );
-										}
-									?></td>
-									<td><?php echo $ip; ?></td>
-									<td><?php echo $started; ?></td>
-									<td><?php echo $expiration; ?></td>
-								</tr>
+								<?php $this->user_session_row( $current_session ); ?>
 							</tbody>
 						</table>
 						<?php
@@ -158,26 +139,9 @@ class WP_Session_Manager {
 							</tr>
 							</thead>
 							<tbody>
-							<?php foreach ( $other_sessions as $session ) :
-								$browser = $this->get_browser( $session );
-								$ip = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
-								$started = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
-								$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
-								?>
-								<tr>
-									<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
-									<td><?php
-										if ( $browser ) {
-											printf( __( '%1$s<br><span class="description">on %2$s %3$s</span>', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
-										} else {
-											_e( 'Unknown', 'wpsm' );
-										}
-									?></td>
-									<td><?php echo $ip; ?></td>
-									<td><?php echo $started; ?></td>
-									<td><?php echo $expiration; ?></td>
-								</tr>
-							<?php endforeach; ?>
+								<?php foreach ( $other_sessions as $session ) {
+									$this->user_session_row( $session );
+								} ?>
 							</tbody>
 						</table>
 						<?php if ( $user->ID == get_current_user_id() ) { ?>
@@ -192,6 +156,28 @@ class WP_Session_Manager {
 			</tr>
 			</tbody>
 		</table>
+		<?php
+	}
+
+	private function user_session_row( array $session ) {
+		$browser    = $this->get_browser( $session );
+		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
+		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
+		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
+		?>
+		<tr>
+			<td><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
+			<td><?php
+				if ( $browser ) {
+					printf( __( '%1$s<br><span class="description">on %2$s %3$s</span>', 'wpsm' ), $browser['browser'], $browser['platform'], $browser['platform_version'] );
+				} else {
+					_e( 'Unknown', 'wpsm' );
+				}
+			?></td>
+			<td><?php echo $ip; ?></td>
+			<td><?php echo $started; ?></td>
+			<td><?php echo $expiration; ?></td>
+		</tr>
 		<?php
 	}
 
