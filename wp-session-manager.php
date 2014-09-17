@@ -65,11 +65,24 @@ class WP_Session_Manager {
 	 * @access public
 	 */
 	public function enqueue_scripts_styles() {
+
+		global $profileuser;
+
 		// Styles.
 		wp_enqueue_style( 'wpsm-options', plugins_url( 'css/profile-options.css' ), array(), '20140909' );
 
 		// Script.
 		wp_enqueue_script( 'wpsm-options', plugins_url( 'js/profile-options.js' ), array( 'jquery' ), '20140909' );
+		wp_localize_script(
+			'wpsm-options',
+			'wpsm',
+			array(
+				'user_id'        => $profileuser->ID,
+				'nonce_multiple' => wp_create_nonce( sprintf( 'destroy_multiple_sessions_%d', $profileuser->ID ) ),
+				'nonce_single'   => wp_create_nonce( sprintf( 'destroy_single_session_%d', $profileuser->ID ) ),
+			)
+		);
+
 	}
 
 	/**
@@ -88,8 +101,9 @@ class WP_Session_Manager {
 			$token           = wp_get_session_token();
 			$other_sessions  = $sessions->get_other_sessions( $token );
 			$current_session = $sessions->get( $token );
+			$current_hash    = $sessions->public_hash_token( $token );
 		} else {
-			$other_sessions  = $sessions->get_all();
+			$other_sessions  = $sessions->get_all_keyed();
 		}
 
 		?>
@@ -113,7 +127,7 @@ class WP_Session_Manager {
 							</tr>
 							</thead>
 							<tbody>
-								<?php $this->user_session_row( $current_session, false ); ?>
+								<?php $this->user_session_row( $current_hash, $current_session, false ); ?>
 							</tbody>
 						</table>
 						<?php
@@ -141,15 +155,15 @@ class WP_Session_Manager {
 							</tr>
 							</thead>
 							<tbody>
-								<?php foreach ( $other_sessions as $session ) {
-									$this->user_session_row( $session );
+								<?php foreach ( $other_sessions as $hash => $session ) {
+									$this->user_session_row( $hash, $session );
 								} ?>
 							</tbody>
 						</table>
 						<?php if ( $user->ID == get_current_user_id() ) { ?>
-							<p><a href="#" class="button button-secondary hide-if-no-js"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a></p>
+							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-other" data-hash="<?php echo esc_attr( $current_hash ); ?>"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a></p>
 						<?php } else { ?>
-							<p><a href="#" class="button button-secondary hide-if-no-js"><?php _e( 'Sign Out of All Sessions', 'wpsm' ); ?></a></p>
+							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-all"><?php _e( 'Sign Out of All Sessions', 'wpsm' ); ?></a></p>
 						<?php } ?>
 					<?php elseif ( $user->ID != get_current_user_id() ): ?>
 						<?php _e( 'Not currently logged in', 'wpsm' ); ?>
@@ -161,13 +175,13 @@ class WP_Session_Manager {
 		<?php
 	}
 
-	private function user_session_row( array $session, $show_sign_out = true ) {
+	private function user_session_row( $hash, array $session, $show_sign_out = true ) {
 		$browser    = $this->get_browser( $session );
 		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
 		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
 		?>
-		<tr>
+		<tr data-hash="<?php echo esc_attr( $hash ); ?>">
 			<td class="col-device"><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
 			<td class="col-browser"><?php
 				if ( $browser ) {
@@ -180,7 +194,7 @@ class WP_Session_Manager {
 			<td class="col-started"><?php echo $started; ?></td>
 			<td class="col-expiration"><?php echo $expiration; ?></td>
 			<?php if ( $show_sign_out ) { ?>
-				<td class="col-signout"><a href="#" class="button"><?php _e( 'Sign Out', 'wpsm' ); ?></a></td>
+				<td class="col-signout"><a href="#" class="button hide-if-no-js session-destroy"><?php _e( 'Sign Out', 'wpsm' ); ?></a></td>
 			<?php } else { ?>
 				<td class="col-signout">&nbsp;</td>
 			<?php } ?>
