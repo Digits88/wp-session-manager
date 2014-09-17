@@ -45,8 +45,8 @@ class WP_Session_Manager {
 		add_filter( 'session_token_manager',           array( $this, 'filter_session_token_manager'  ) );
 
 		// AJAX actions for destroying sessions.
-		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'destroy_multiple_sessions'     ) );
-		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'destroy_single_session'        ) );
+		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'ajax_destroy_multiple_sessions') );
+		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'ajax_destroy_single_session'   ) );
 	}
 
 	public function action_init() {
@@ -274,7 +274,26 @@ class WP_Session_Manager {
 	 *
 	 * @access public
 	 */
-	public function destroy_multiple_sessions() {
+	public function ajax_destroy_multiple_sessions() {
+
+		$user = self::check_ajax( 'destroy_multiple_sessions_%d' );
+
+		if ( is_wp_error( $user ) ) {
+			wp_send_json_error( array(
+				'error'   => $user->get_error_code(),
+				'message' => $user->get_error_message(),
+			) );
+		}
+
+		if ( isset( $_POST['hash'] ) ) {
+			$keep = wp_unslash( $_POST['hash'] );
+		} else {
+			$keep = null;
+		}
+
+		$this->destroy_multiple_sessions( $user, $keep );
+
+		wp_send_json_success();
 
 	}
 
@@ -285,7 +304,75 @@ class WP_Session_Manager {
 	 *
 	 * @access public
 	 */
-	public function destroy_single_session() {
+	public function ajax_destroy_single_session() {
+
+		if ( empty( $_POST['hash'] ) ) {
+			$user = new WP_Error( 'no_hash', __( 'No session hash specified', 'wpsm' ) );
+		} else {
+			$user = self::check_ajax( 'destroy_single_session_%d' );
+		}
+
+		if ( is_wp_error( $user ) ) {
+			wp_send_json_error( array(
+				'error'   => $user->get_error_code(),
+				'message' => $user->get_error_message(),
+			) );
+		}
+
+		$hash = wp_unslash( $_POST['hash'] );
+
+		$this->destroy_single_session( $user, $hash );
+
+		wp_send_json_success();
+
+	}
+
+	public function destroy_multiple_sessions( WP_User $user, $hash_to_keep = null ) {
+
+		$sessions = $this->get_sessions( $user );
+
+		if ( is_string( $hash_to_keep ) ) {
+			$sessions->destroy_others_by_hash( $hash_to_keep );
+		} else {
+			$sessions->destroy_all();
+		}
+
+	}
+
+	public function destroy_single_session( WP_User $user, $hash ) {
+		$sessions = $this->get_sessions( $user );
+		$sessions->destroy_by_hash( $hash );
+	}
+
+	/**
+	 * Check the AJAX request for validity and permissions, and return the corresponding user.
+	 *
+	 * @param  string $action   The nonce action.
+	 * @return WP_User|WP_Error A WP_User object on success, a WP_Error object on failure.
+	 */
+	private static function check_ajax( $action ) {
+
+		if ( empty( $_POST['user_id'] ) ) {
+			return new WP_Error( 'no_user_id', __( 'No user ID specified', 'wpsm' ) );
+		}
+
+		$user = new WP_User( absint( $_POST['user_id'] ) );
+
+		if ( !$user->exists() ) {
+			return new WP_Error( 'invalid_user', __( 'The specified user does not exist', 'wpsm' ) );
+		}
+
+		if ( !current_user_can( 'edit_user', $user->ID ) ) {
+			return new WP_Error( 'not_allowed', __( 'You do not have permission to edit this user', 'wpsm' ) );
+		}
+
+		if ( !check_ajax_referer( sprintf( $action, $user->ID ), false, false ) ) {
+			return new WP_Error( 'invalid_nonce', __( 'Invalid nonce', 'wpsm' ) );
+		}
+
+		return $user;
+
+	}
 
 	/**
 	 * Singleton getter.
@@ -326,6 +413,38 @@ class WP_Session_Manager_User_Meta_Session_Tokens extends WP_User_Meta_Session_T
 		unset( $all[$current] );
 
 		return $all;
+	}
+
+	/**
+	 * Destroy a session.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param string $hash Session hash to destroy.
+	 */
+	public function destroy_by_hash( $hash ) {
+		$this->update_session( $hash, null );
+	}
+
+	/**
+	 * Destroy all session tokens for this user,
+	 * except a single hash.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param string $hash_to_keep Session hash to keep.
+	 */
+	public function destroy_others_by_hash( $hash_to_keep ) {
+		$session = $this->get_session( $hash_to_keep );
+		if ( $session ) {
+			$this->update_sessions( array(
+				$hash_to_keep => $session
+			) );
+		} else {
+			$this->destroy_all_sessions();
+		}
 	}
 
 }
