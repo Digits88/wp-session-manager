@@ -69,10 +69,11 @@ class WP_Session_Manager {
 		global $profileuser;
 
 		// Styles.
-		wp_enqueue_style( 'wpsm-options', plugins_url( 'css/profile-options.css' ), array(), '20140909' );
+		wp_enqueue_style( 'wpsm-options', plugins_url( 'css/profile-options.css', __FILE__ ), array(), filemtime( plugin_dir_path( __FILE__ ) . 'css/profile-options.css' ) );
 
 		// Script.
-		wp_enqueue_script( 'wpsm-options', plugins_url( 'js/profile-options.js' ), array( 'jquery' ), '20140909' );
+		wp_enqueue_script( 'wpsm-options', plugins_url( 'js/profile-options.js', __FILE__ ), array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'js/profile-options.js' ) );
+
 		wp_localize_script(
 			'wpsm-options',
 			'wpsm',
