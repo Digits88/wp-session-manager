@@ -315,8 +315,11 @@ class WP_Session_Manager {
 	 * @return array Filtered session information array.
 	 */
 	public function filter_collected_session_info( array $info ) {
+
 		// IP address.
-		$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
+		if ( !empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
+		}
 
 		// User-agent.
 		if ( ! empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
