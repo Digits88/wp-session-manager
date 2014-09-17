@@ -129,7 +129,7 @@ class WP_Session_Manager {
 	 * @param WP_User $user WP_User object for the current user.
 	 */
 	public function user_options_display( WP_User $user ) {
-		$sessions = $this->get_sessions( $user );
+		$sessions = $this->get_session_manager( $user );
 
 		if ( $user->ID == get_current_user_id() ) {
 			$token           = wp_get_session_token();
@@ -330,7 +330,7 @@ class WP_Session_Manager {
 	}
 
 	/**
-	 * Get a session object for the given user.
+	 * Get a session manager object for the given user.
 	 *
 	 * @since 1.0
 	 *
@@ -339,7 +339,7 @@ class WP_Session_Manager {
 	 * @param  WP_User $user A WP_User object.
 	 * @return WP_Session_Tokens The WP_Session_Tokens object for the user.
 	 */
-	protected function get_sessions( WP_User $user ) {
+	protected function get_session_manager( WP_User $user ) {
 
 		if ( isset( $this->session[$user->ID] ) ) {
 			return $this->session[$user->ID];
@@ -421,7 +421,7 @@ class WP_Session_Manager {
 	 */
 	public function destroy_multiple_sessions( WP_User $user, $hash_to_keep = null ) {
 
-		$sessions = $this->get_sessions( $user );
+		$sessions = $this->get_session_manager( $user );
 
 		if ( is_string( $hash_to_keep ) ) {
 			$sessions->destroy_others_by_hash( $hash_to_keep );
@@ -441,7 +441,7 @@ class WP_Session_Manager {
 	 * @param  string  $hash The hash of the session key which should be destroyed.
 	 */
 	public function destroy_single_session( WP_User $user, $hash ) {
-		$sessions = $this->get_sessions( $user );
+		$sessions = $this->get_session_manager( $user );
 		$sessions->destroy_by_hash( $hash );
 	}
 
