@@ -12,3 +12,7 @@ Adds controls to the user profile screen and user editing screen for managing lo
 ## Beta ##
 
 This is a working beta. Feel free to test and report issues.
+
+## Tests ##
+
+[![Build Status](https://travis-ci.org/johnbillion/wp-session-manager.svg?branch=master)](https://travis-ci.org/johnbillion/wp-session-manager)
