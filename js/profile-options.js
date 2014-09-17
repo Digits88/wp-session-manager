@@ -15,7 +15,11 @@
 
 		$.post( ajaxurl, data, function( response ) {
 
-			// @TODO remove the relevant table row
+			if ( response.success ) {
+				$('tr[data-hash="' + data.hash + '"]').fadeOut('slow');
+			} else {
+				alert( response.data.message );
+			}
 
 		}, 'json' );
 
@@ -38,7 +42,11 @@
 
 		$.post( ajaxurl, data, function( response ) {
 
-			// @TODO remove the relevant table
+			if ( response.success ) {
+				$('#other-locations').fadeOut('slow');
+			} else {
+				alert( response.data.message );
+			}
 
 		}, 'json' );
 

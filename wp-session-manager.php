@@ -134,6 +134,9 @@ class WP_Session_Manager {
 					}
 					$count = count( $other_sessions );
 					if ( $count > 0 ) :
+						?>
+						<div id="other-locations">
+						<?php
 						if ( $user->ID == get_current_user_id() ) {
 							echo '<p>' . sprintf( _n( 'You&#8217;re logged in to %s other location:', 'You&#8217;re logged in to %s other locations:', $count, 'wpsm' ),
 								number_format_i18n( $count )
@@ -165,6 +168,7 @@ class WP_Session_Manager {
 						<?php } else { ?>
 							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-all"><?php _e( 'Sign Out of All Sessions', 'wpsm' ); ?></a></p>
 						<?php } ?>
+						</div>
 					<?php elseif ( $user->ID != get_current_user_id() ): ?>
 						<?php _e( 'Not currently logged in', 'wpsm' ); ?>
 					<?php endif; // $count > 1 ?>
