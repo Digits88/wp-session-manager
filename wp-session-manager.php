@@ -15,7 +15,7 @@
 class WP_Session_Manager {
 
 	/**
-	 * Current session.
+	 * The user's current session.
 	 *
 	 * @since 1.0
 	 * @access protected
@@ -23,7 +23,22 @@ class WP_Session_Manager {
 	 */
 	protected $session = array();
 
+	/**
+	 * The Browscap instance.
+	 *
+	 * @since 1.0
+	 * @access protected
+	 * @var Browscap
+	 */
 	protected $bc = null;
+
+	/**
+	 * Array of cached Browscap browser data.
+	 *
+	 * @since 1.0
+	 * @access protected
+	 * @var array
+	 */
 	protected $bc_cache = array();
 
 	/**
@@ -49,10 +64,28 @@ class WP_Session_Manager {
 		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'ajax_destroy_single_session'   ) );
 	}
 
+	/**
+	 * Action fired on init. Loads the l10n files.
+	 * 
+	 * @since 1.0
+	 * @access public
+	 */
 	public function action_init() {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
 
+	/**
+	 * Filter which class is used for WordPress' session management.
+	 *
+	 * This overrides the default session manager with our own one which extends the built-in
+	 * `WP_User_Meta_Session_Tokens` class.
+	 * 
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param  string $manager The session manager class name.
+	 * @return string          Our updated session manager class name.
+	 */
 	public function filter_session_token_manager( $manager ) {
 		return 'WP_Session_Manager_User_Meta_Session_Tokens';
 	}
@@ -180,7 +213,17 @@ class WP_Session_Manager {
 		<?php
 	}
 
-	private function user_session_row( $hash, array $session, $show_sign_out = true ) {
+	/**
+	 * Output a table row for a user session list table.
+	 *
+	 * @since 1.0
+	 * @access protected
+	 *
+	 * @param  string  $hash          The session hash.
+	 * @param  array   $session       The session data.
+	 * @param  boolean $show_sign_out Whether to show the 'Sign Out' link for this session. Default true.
+	 */
+	protected function user_session_row( $hash, array $session, $show_sign_out = true ) {
 		$browser    = $this->get_browser( $session );
 		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
@@ -207,6 +250,15 @@ class WP_Session_Manager {
 		<?php
 	}
 
+	/**
+	 * Return a class name for the current browser information. Used to display a dashicon on each table row.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param  array  $browser The browser information returned by `Browscap::getBrowser()`.
+	 * @return string          The class name.
+	 */
 	public function device_class( array $browser ) {
 		if ( !$browser ) {
 			return null;
@@ -221,6 +273,16 @@ class WP_Session_Manager {
 		return 'dashicons dashicons-' . $class;
 	}
 
+	/**
+	 * Return browser information for the given session.
+	 *
+	 * @see Browscap::getBrowser()
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param  array  $session The session data.
+	 * @return array           Browser information for the session.
+	 */
 	public function get_browser( array $session ) {
 
 		if ( !isset( $session['user-agent'] ) or empty( $session['user-agent'] ) ) {
@@ -346,6 +408,17 @@ class WP_Session_Manager {
 
 	}
 
+	/**
+	 * Destroy multiple sessions for a user.
+	 *
+	 * All of the user's session will be destroyed except the session matching `$hash_to_keep`, if present.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param  WP_User $user         The user object.
+	 * @param  string  $hash_to_keep The hash of the session key which should be kept. Optional.
+	 */
 	public function destroy_multiple_sessions( WP_User $user, $hash_to_keep = null ) {
 
 		$sessions = $this->get_sessions( $user );
@@ -358,6 +431,15 @@ class WP_Session_Manager {
 
 	}
 
+	/**
+	 * Destroy a session for a user.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param  WP_User $user The user object.
+	 * @param  string  $hash The hash of the session key which should be destroyed.
+	 */
 	public function destroy_single_session( WP_User $user, $hash ) {
 		$sessions = $this->get_sessions( $user );
 		$sessions->destroy_by_hash( $hash );
@@ -365,6 +447,9 @@ class WP_Session_Manager {
 
 	/**
 	 * Check the AJAX request for validity and permissions, and return the corresponding user.
+	 *
+	 * @since 1.0
+	 * @access private
 	 *
 	 * @param  string $action   The nonce action.
 	 * @return WP_User|WP_Error A WP_User object on success, a WP_Error object on failure.
@@ -417,14 +502,44 @@ class WP_Session_Manager {
 
 class WP_Session_Manager_User_Meta_Session_Tokens extends WP_User_Meta_Session_Tokens {
 
+	/**
+	 * Retrieve all sessions of a user.
+	 *
+	 * This is a public wrapper for `WP_Session_Tokens::get_sessions()` which can be used in place of
+	 * `WP_Session_Tokens::get_all()` when the array keys containing the session hashes need to be maintained.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @return array Sessions of a user.
+	 */
 	public function get_all_keyed() {
 		return $this->get_sessions();
 	}
 
+	/**
+	 * Hashes a session token for storage.
+	 *
+	 * This is a public version of `WP_Session_Tokens::hash_token()`.
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @param string $token Session token to hash.
+	 * @return string A hash of the session token (a verifier).
+	 */
 	public function public_hash_token( $token ) {
 		return hash( 'sha256', $token );
 	}
 
+	/**
+	 * Retrieve all sessions of a user except the specified session (typically the current session).
+	 *
+	 * @since 1.0
+	 * @access public
+	 *
+	 * @return array Sessions of a user except the specified session.
+	 */
 	public function get_other_sessions( $token ) {
 		$all     = $this->get_all_keyed();
 		$current = $this->public_hash_token( $token );
