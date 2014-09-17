@@ -7,8 +7,8 @@
 **Stable tag:** 1.0  
 **License:** GPL v2 or later  
 
-Adds controls to a user's profile screen for managing their logged-in sessions.
+Adds controls to the user profile screen and user editing screen for managing logged-in sessions.
 
-## WIP / POC / OMG ##
+## Beta ##
 
-This is under development. Don't use it.
+This is a working beta. Feel free to test and report issues.
