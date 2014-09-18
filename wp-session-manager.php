@@ -220,6 +220,7 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Last Seen', 'wpsm' ); ?></th>
 								<th scope="col">&nbsp;</th>
 							</tr>
 							</thead>
@@ -251,6 +252,7 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Last Seen', 'wpsm' ); ?></th>
 								<th scope="col"><span class="screen-reader-text"><?php _e( 'Sign Out', 'wpsm' ); ?></span></th>
 							</tr>
 							</thead>
@@ -291,6 +293,12 @@ class WP_Session_Manager {
 		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
 		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
+
+		add_filter('human_time_diff', array( $this, 'less_human_time_diff' ), 10, 4 );
+		// @TODO: Remove the ternary. There now to avoid notices on old sessions
+		$lastseen = isset($session['seen']) ?  human_time_diff( $session['seen'] ) : 'A long time ago';
+		remove_filter('human_time_diff', array( $this, 'less_human_time_diff' ), 10, 4 );
+
 		?>
 		<tr data-hash="<?php echo esc_attr( $hash ); ?>">
 			<td class="col-device"><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
@@ -304,6 +312,7 @@ class WP_Session_Manager {
 			<td class="col-ip"><?php echo $ip; ?></td>
 			<td class="col-started"><?php echo $started; ?></td>
 			<td class="col-expiration"><?php echo $expiration; ?></td>
+			<td class="col-lastseen"><?php echo $lastseen; ?></td>
 			<?php if ( $show_sign_out ) { ?>
 				<td class="col-signout"><a href="#" class="button hide-if-no-js session-destroy"><?php _e( 'Sign Out', 'wpsm' ); ?></a></td>
 			<?php } else { ?>
@@ -562,6 +571,22 @@ class WP_Session_Manager {
 
 		return $instance;
 
+	}
+
+	/**
+	 * Filters Human Time Diff to be more fuzzy 
+	 *
+	 * @since 1.0
+	 * @access public 
+	 *
+	 */
+	public function less_human_time_diff( $since, $diff, $from, $to ) {
+
+		if ( $diff <= HOUR_IN_SECONDS ) {
+			$since = __( 'This Hour' );
+		}
+
+		return $since;
 	}
 
 }
