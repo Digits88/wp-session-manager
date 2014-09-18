@@ -50,6 +50,9 @@ class WP_Session_Manager {
 		// Textdomain.
 		add_action( 'init',                            array( $this, 'action_init'                   ) );
 
+		// save some recent activity
+		add_action( 'heartbeat_received',              array( $this, 'heartbeat_received'            ) );
+
 		// Profile options.
 		add_action( 'admin_head-profile.php',          array( $this, 'enqueue_scripts_styles'        ) );
 		add_action( 'admin_head-user-edit.php',        array( $this, 'enqueue_scripts_styles'        ) );
@@ -66,7 +69,7 @@ class WP_Session_Manager {
 
 	/**
 	 * Action fired on init. Loads the l10n files.
-	 * 
+	 *
 	 * @since 1.0
 	 * @access public
 	 */
@@ -75,11 +78,35 @@ class WP_Session_Manager {
 	}
 
 	/**
+	 * Action fired on heartbeat recieved
+	 *
+	 * Update the last seen information once per hour
+	 */
+	public function heartbeat_received( $response ) {
+
+		$token = wp_get_session_token();
+		$user = get_current_user_id();
+		$manager = WP_Session_Tokens::get_instance( $user );
+		$session = $manager->get( $token );
+
+		$last_seen = isset($session['seen']) ? $session['seen'] : 0 ;
+
+		if ( $last_seen < time() - ( HOUR_IN_SECONDS ) ) {
+			$response['last_seen_updated'] = true;
+			$session['seen'] = time();
+			$manager->update( $token, $session );
+		} else {
+			$response['last_seen_updated'] = false;
+		}
+		return $response;
+	}
+
+	/**
 	 * Filter which class is used for WordPress' session management.
 	 *
 	 * This overrides the default session manager with our own one which extends the built-in
 	 * `WP_User_Meta_Session_Tokens` class.
-	 * 
+	 *
 	 * @since 1.0
 	 * @access public
 	 *
