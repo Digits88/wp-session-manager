@@ -50,6 +50,8 @@ class WP_Session_Manager {
 		// Textdomain.
 		add_action( 'init',                            array( $this, 'action_init'                   ) );
 
+		add_action( 'admin_init',                      array( $this, 'admin_init'                   ) );
+
 		// save some recent activity
 		add_action( 'heartbeat_received',              array( $this, 'heartbeat_received'            ) );
 
@@ -87,6 +89,35 @@ class WP_Session_Manager {
 	 */
 	public function heartbeat_received( $response ) {
 
+		$update = $this->_maybe_update_last_seen();
+		$response['last_seen_updated'] = $update;
+
+		return $response;
+	}
+
+
+	/**
+	 * Action fired on admin init
+     *
+	 * Update the last seen information once per hour
+	 *
+	 * @since 1.0
+	 * @access public
+	 */
+	public function admin_init() {
+		$this->_maybe_update_last_seen();
+	}
+
+	/**
+	 * Maybe update the last seen time in the current session
+	 *
+	 * If it has been an hour since this session was seen, update
+	 * that information in the session
+	 *
+	 * @since 1.0
+	 * @access private
+	 */
+	private function _maybe_update_last_seen() {
 		$token = wp_get_session_token();
 		$user = get_current_user_id();
 		$manager = WP_Session_Tokens::get_instance( $user );
@@ -95,13 +126,13 @@ class WP_Session_Manager {
 		$last_seen = isset($session['seen']) ? $session['seen'] : 0 ;
 
 		if ( $last_seen < time() - ( HOUR_IN_SECONDS ) ) {
-			$response['last_seen_updated'] = true;
 			$session['seen'] = time();
 			$manager->update( $token, $session );
+			return true;
 		} else {
-			$response['last_seen_updated'] = false;
+			return false;
 		}
-		return $response;
+
 	}
 
 
