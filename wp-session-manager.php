@@ -81,6 +81,9 @@ class WP_Session_Manager {
 	 * Action fired on heartbeat recieved
 	 *
 	 * Update the last seen information once per hour
+	 *
+	 * @since 1.0
+	 * access public
 	 */
 	public function heartbeat_received( $response ) {
 
@@ -100,6 +103,8 @@ class WP_Session_Manager {
 		}
 		return $response;
 	}
+
+
 
 	/**
 	 * Filter which class is used for WordPress' session management.
