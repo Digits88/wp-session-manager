@@ -57,7 +57,6 @@ class WP_Session_Manager {
 
 		// Attach extra session information.
 		add_filter( 'attach_session_information',      array( $this, 'filter_collected_session_info' ) );
-		add_filter( 'session_token_manager',           array( $this, 'filter_session_token_manager'  ) );
 
 		// AJAX actions for destroying sessions.
 		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'ajax_destroy_multiple_sessions') );
@@ -71,22 +70,6 @@ class WP_Session_Manager {
 	 */
 	public function action_init() {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-	}
-
-	/**
-	 * Filter which class is used for WordPress' session management.
-	 *
-	 * This overrides the default session manager with our own one which extends the built-in
-	 * `WP_User_Meta_Session_Tokens` class.
-	 * 
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param  string $manager The session manager class name.
-	 * @return string          Our updated session manager class name.
-	 */
-	public function filter_session_token_manager( $manager ) {
-		return 'WP_Session_Manager_User_Meta_Session_Tokens';
 	}
 
 	/**
@@ -448,89 +431,6 @@ class WP_Session_Manager {
 
 		return $instance;
 
-	}
-
-}
-
-class WP_Session_Manager_User_Meta_Session_Tokens extends WP_User_Meta_Session_Tokens {
-
-	/**
-	 * Retrieve all sessions of a user.
-	 *
-	 * This is a public wrapper for `WP_Session_Tokens::get_sessions()` which can be used in place of
-	 * `WP_Session_Tokens::get_all()` when the array keys containing the session hashes need to be maintained.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @return array Sessions of a user.
-	 */
-	public function get_all_keyed() {
-		return $this->get_sessions();
-	}
-
-	/**
-	 * Hashes a session token for storage.
-	 *
-	 * This is a public version of `WP_Session_Tokens::hash_token()`.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param string $token Session token to hash.
-	 * @return string A hash of the session token (a verifier).
-	 */
-	public function public_hash_token( $token ) {
-		return hash( 'sha256', $token );
-	}
-
-	/**
-	 * Retrieve all sessions of a user except the specified session (typically the current session).
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @return array Sessions of a user except the specified session.
-	 */
-	public function get_other_sessions( $token ) {
-		$all     = $this->get_all_keyed();
-		$current = $this->public_hash_token( $token );
-
-		unset( $all[$current] );
-
-		return $all;
-	}
-
-	/**
-	 * Destroy a session.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param string $hash Session hash to destroy.
-	 */
-	public function destroy_by_hash( $hash ) {
-		$this->update_session( $hash, null );
-	}
-
-	/**
-	 * Destroy all session tokens for this user,
-	 * except a single hash.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param string $hash_to_keep Session hash to keep.
-	 */
-	public function destroy_others_by_hash( $hash_to_keep ) {
-		$session = $this->get_session( $hash_to_keep );
-		if ( $session ) {
-			$this->update_sessions( array(
-				$hash_to_keep => $session
-			) );
-		} else {
-			$this->destroy_all_sessions();
-		}
 	}
 
 }
