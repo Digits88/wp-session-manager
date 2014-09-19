@@ -57,11 +57,9 @@ class WP_Session_Manager {
 
 		// Attach extra session information.
 		add_filter( 'attach_session_information',      array( $this, 'filter_collected_session_info' ) );
-		add_filter( 'session_token_manager',           array( $this, 'filter_session_token_manager'  ) );
 
 		// AJAX actions for destroying sessions.
 		add_action( 'wp_ajax_wpsm_destroy_sessions',   array( $this, 'ajax_destroy_multiple_sessions') );
-		add_action( 'wp_ajax_wpsm_destroy_session',    array( $this, 'ajax_destroy_single_session'   ) );
 	}
 
 	/**
@@ -72,22 +70,6 @@ class WP_Session_Manager {
 	 */
 	public function action_init() {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-	}
-
-	/**
-	 * Filter which class is used for WordPress' session management.
-	 *
-	 * This overrides the default session manager with our own one which extends the built-in
-	 * `WP_User_Meta_Session_Tokens` class.
-	 * 
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param  string $manager The session manager class name.
-	 * @return string          Our updated session manager class name.
-	 */
-	public function filter_session_token_manager( $manager ) {
-		return 'WP_Session_Manager_User_Meta_Session_Tokens';
 	}
 
 	/**
@@ -113,7 +95,6 @@ class WP_Session_Manager {
 			array(
 				'user_id'        => $profileuser->ID,
 				'nonce_multiple' => wp_create_nonce( sprintf( 'destroy_multiple_sessions_%d', $profileuser->ID ) ),
-				'nonce_single'   => wp_create_nonce( sprintf( 'destroy_single_session_%d', $profileuser->ID ) ),
 			)
 		);
 
@@ -131,13 +112,17 @@ class WP_Session_Manager {
 	public function user_options_display( WP_User $user ) {
 		$sessions = $this->get_session_manager( $user );
 
+		$all_sessions = $sessions->get_all();
+
 		if ( $user->ID == get_current_user_id() ) {
 			$token           = wp_get_session_token();
-			$other_sessions  = $sessions->get_other_sessions( $token );
 			$current_session = $sessions->get( $token );
-			$current_hash    = $sessions->public_hash_token( $token );
-		} else {
-			$other_sessions  = $sessions->get_all_keyed();
+			foreach ( $all_sessions as $key => $session ) {
+				if ( $session === $current_session ) {
+					unset( $all_sessions[$key] );
+					break;
+				}
+			}
 		}
 
 		?>
@@ -157,16 +142,15 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
-								<th scope="col">&nbsp;</th>
 							</tr>
 							</thead>
 							<tbody>
-								<?php $this->user_session_row( $current_hash, $current_session, false ); ?>
+								<?php $this->user_session_row( $current_session ); ?>
 							</tbody>
 						</table>
 						<?php
 					}
-					$count = count( $other_sessions );
+					$count = count( $all_sessions );
 					if ( $count > 0 ) :
 						?>
 						<div id="other-locations">
@@ -188,17 +172,16 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
-								<th scope="col"><span class="screen-reader-text"><?php _e( 'Sign Out', 'wpsm' ); ?></span></th>
 							</tr>
 							</thead>
 							<tbody>
-								<?php foreach ( $other_sessions as $hash => $session ) {
-									$this->user_session_row( $hash, $session );
+								<?php foreach ( $all_sessions as $session ) {
+									$this->user_session_row( $session );
 								} ?>
 							</tbody>
 						</table>
 						<?php if ( $user->ID == get_current_user_id() ) { ?>
-							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-other" data-hash="<?php echo esc_attr( $current_hash ); ?>"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a></p>
+							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-other" data-token="<?php echo esc_attr( $token ); ?>"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a></p>
 						<?php } else { ?>
 							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-all"><?php _e( 'Sign Out of All Sessions', 'wpsm' ); ?></a></p>
 						<?php } ?>
@@ -219,17 +202,15 @@ class WP_Session_Manager {
 	 * @since 1.0
 	 * @access protected
 	 *
-	 * @param  string  $hash          The session hash.
 	 * @param  array   $session       The session data.
-	 * @param  boolean $show_sign_out Whether to show the 'Sign Out' link for this session. Default true.
 	 */
-	protected function user_session_row( $hash, array $session, $show_sign_out = true ) {
+	protected function user_session_row( array $session ) {
 		$browser    = $this->get_browser( $session );
 		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
 		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
 		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
 		?>
-		<tr data-hash="<?php echo esc_attr( $hash ); ?>">
+		<tr>
 			<td class="col-device"><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
 			<td class="col-browser"><?php
 				if ( $browser ) {
@@ -241,11 +222,6 @@ class WP_Session_Manager {
 			<td class="col-ip"><?php echo $ip; ?></td>
 			<td class="col-started"><?php echo $started; ?></td>
 			<td class="col-expiration"><?php echo $expiration; ?></td>
-			<?php if ( $show_sign_out ) { ?>
-				<td class="col-signout"><a href="#" class="button hide-if-no-js session-destroy"><?php _e( 'Sign Out', 'wpsm' ); ?></a></td>
-			<?php } else { ?>
-				<td class="col-signout">&nbsp;</td>
-			<?php } ?>
 		</tr>
 		<?php
 	}
@@ -369,8 +345,8 @@ class WP_Session_Manager {
 			) );
 		}
 
-		if ( isset( $_POST['hash'] ) ) {
-			$keep = wp_unslash( $_POST['hash'] );
+		if ( isset( $_POST['token'] ) ) {
+			$keep = wp_unslash( $_POST['token'] );
 		} else {
 			$keep = null;
 		}
@@ -382,70 +358,26 @@ class WP_Session_Manager {
 	}
 
 	/**
-	 * AJAX handler for destroying a single open session for the current user.
-	 *
-	 * @since 1.0
-	 *
-	 * @access public
-	 */
-	public function ajax_destroy_single_session() {
-
-		if ( empty( $_POST['hash'] ) ) {
-			$user = new WP_Error( 'no_hash', __( 'No session hash specified', 'wpsm' ) );
-		} else {
-			$user = self::check_ajax( 'destroy_single_session_%d' );
-		}
-
-		if ( is_wp_error( $user ) ) {
-			wp_send_json_error( array(
-				'error'   => $user->get_error_code(),
-				'message' => $user->get_error_message(),
-			) );
-		}
-
-		$hash = wp_unslash( $_POST['hash'] );
-
-		$this->destroy_single_session( $user, $hash );
-
-		wp_send_json_success();
-
-	}
-
-	/**
 	 * Destroy multiple sessions for a user.
 	 *
-	 * All of the user's session will be destroyed except the session matching `$hash_to_keep`, if present.
+	 * All of the user's session will be destroyed except the session matching `$token_to_keep`, if present.
 	 *
 	 * @since 1.0
 	 * @access public
 	 *
-	 * @param  WP_User $user         The user object.
-	 * @param  string  $hash_to_keep The hash of the session key which should be kept. Optional.
+	 * @param  WP_User $user          The user object.
+	 * @param  string  $token_to_keep The token of the session which should be kept. Optional.
 	 */
-	public function destroy_multiple_sessions( WP_User $user, $hash_to_keep = null ) {
+	public function destroy_multiple_sessions( WP_User $user, $token_to_keep = null ) {
 
 		$sessions = $this->get_session_manager( $user );
 
-		if ( is_string( $hash_to_keep ) ) {
-			$sessions->destroy_others_by_hash( $hash_to_keep );
+		if ( is_string( $token_to_keep ) ) {
+			$sessions->destroy_others( $token_to_keep );
 		} else {
 			$sessions->destroy_all();
 		}
 
-	}
-
-	/**
-	 * Destroy a session for a user.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param  WP_User $user The user object.
-	 * @param  string  $hash The hash of the session key which should be destroyed.
-	 */
-	public function destroy_single_session( WP_User $user, $hash ) {
-		$sessions = $this->get_session_manager( $user );
-		$sessions->destroy_by_hash( $hash );
 	}
 
 	/**
@@ -499,89 +431,6 @@ class WP_Session_Manager {
 
 		return $instance;
 
-	}
-
-}
-
-class WP_Session_Manager_User_Meta_Session_Tokens extends WP_User_Meta_Session_Tokens {
-
-	/**
-	 * Retrieve all sessions of a user.
-	 *
-	 * This is a public wrapper for `WP_Session_Tokens::get_sessions()` which can be used in place of
-	 * `WP_Session_Tokens::get_all()` when the array keys containing the session hashes need to be maintained.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @return array Sessions of a user.
-	 */
-	public function get_all_keyed() {
-		return $this->get_sessions();
-	}
-
-	/**
-	 * Hashes a session token for storage.
-	 *
-	 * This is a public version of `WP_Session_Tokens::hash_token()`.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param string $token Session token to hash.
-	 * @return string A hash of the session token (a verifier).
-	 */
-	public function public_hash_token( $token ) {
-		return hash( 'sha256', $token );
-	}
-
-	/**
-	 * Retrieve all sessions of a user except the specified session (typically the current session).
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @return array Sessions of a user except the specified session.
-	 */
-	public function get_other_sessions( $token ) {
-		$all     = $this->get_all_keyed();
-		$current = $this->public_hash_token( $token );
-
-		unset( $all[$current] );
-
-		return $all;
-	}
-
-	/**
-	 * Destroy a session.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param string $hash Session hash to destroy.
-	 */
-	public function destroy_by_hash( $hash ) {
-		$this->update_session( $hash, null );
-	}
-
-	/**
-	 * Destroy all session tokens for this user,
-	 * except a single hash.
-	 *
-	 * @since 1.0
-	 * @access public
-	 *
-	 * @param string $hash_to_keep Session hash to keep.
-	 */
-	public function destroy_others_by_hash( $hash_to_keep ) {
-		$session = $this->get_session( $hash_to_keep );
-		if ( $session ) {
-			$this->update_sessions( array(
-				$hash_to_keep => $session
-			) );
-		} else {
-			$this->destroy_all_sessions();
-		}
 	}
 
 }

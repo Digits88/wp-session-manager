@@ -5,7 +5,6 @@ class Test_WP_Session_Manager extends WP_UnitTestCase {
 	public $wpdm   = null;
 	public $user   = null;
 	public $tokens = array();
-	public $hashes = array();
 
 	function setUp() {
 
@@ -22,43 +21,19 @@ class Test_WP_Session_Manager extends WP_UnitTestCase {
 		// Add some sessions for the user:
 		for ( $i = 0; $i <= 3; $i++ ) {
 			$this->tokens[$i] = $this->manager->create( $expire );
-			$this->hashes[$i] = $this->manager->public_hash_token( $this->tokens[$i] );
 		}
-
-	}
-
-	function testSingleSessionsAreDestroyed() {
-
-		// Destroy the second session:
-		$this->wpsm->destroy_single_session( $this->user, $this->hashes[1] );
-
-		// Test the session destruction:
-		$this->assertEquals( array(
-			$this->hashes[0],
-			$this->hashes[2],
-			$this->hashes[3],
-		), array_keys( $this->manager->get_all_keyed() ) );
-
-		// Destroy the third session:
-		$this->wpsm->destroy_single_session( $this->user, $this->hashes[2] );
-
-		// Test the session destruction:
-		$this->assertEquals( array(
-			$this->hashes[0],
-			$this->hashes[3],
-		), array_keys( $this->manager->get_all_keyed() ) );
 
 	}
 
 	function testMultipleSessionsAreDestroyed() {
 
 		// Destroy all but the second session:
-		$this->wpsm->destroy_multiple_sessions( $this->user, $this->hashes[1] );
+		$this->wpsm->destroy_multiple_sessions( $this->user, $this->tokens[1] );
 
 		// Test the session destruction:
 		$this->assertEquals( array(
-			$this->hashes[1],
-		), array_keys( $this->manager->get_all_keyed() ) );
+			$this->manager->get( $this->tokens[1] ),
+		), $this->manager->get_all() );
 
 	}
 
@@ -68,7 +43,7 @@ class Test_WP_Session_Manager extends WP_UnitTestCase {
 		$this->wpsm->destroy_multiple_sessions( $this->user );
 
 		// Test the session destruction:
-		$this->assertEquals( array(), array_keys( $this->manager->get_all_keyed() ) );
+		$this->assertEquals( array(), $this->manager->get_all() );
 
 	}
 
