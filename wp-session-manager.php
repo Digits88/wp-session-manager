@@ -15,7 +15,7 @@
 class WP_Session_Manager {
 
 	/**
-	 * The user's current session.
+	 * Array of user session managers.
 	 *
 	 * @since 1.0
 	 * @access protected
