@@ -16,10 +16,6 @@
 	padding-right: 0;
 }
 
-.sessions-table td.col-signout {
-	width: 80px;
-}
-
 .sessions-table .description {
 	color: #666;
 }
