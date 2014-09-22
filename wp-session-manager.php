@@ -140,7 +140,7 @@ class WP_Session_Manager {
 							<tr>
 								<th scope="col" colspan="2"><?php _e( 'Access Type', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
-								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Logged In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
 							</tr>
 							</thead>
@@ -170,7 +170,7 @@ class WP_Session_Manager {
 							<tr>
 								<th scope="col" colspan="2"><?php _e( 'Access Type', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
-								<th scope="col"><?php _e( 'Signed In', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Logged In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
 							</tr>
 							</thead>
@@ -181,9 +181,9 @@ class WP_Session_Manager {
 							</tbody>
 						</table>
 						<?php if ( $user->ID == get_current_user_id() ) { ?>
-							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-other" data-token="<?php echo esc_attr( $token ); ?>"><?php _e( 'Sign Out of All Other Sessions', 'wpsm' ); ?></a></p>
+							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-other" data-token="<?php echo esc_attr( $token ); ?>"><?php _e( 'Log Out of All Other Sessions', 'wpsm' ); ?></a></p>
 						<?php } else { ?>
-							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-all"><?php _e( 'Sign Out of All Sessions', 'wpsm' ); ?></a></p>
+							<p><a href="#" class="button button-secondary hide-if-no-js session-destroy-all"><?php _e( 'Log Out of All Sessions', 'wpsm' ); ?></a></p>
 						<?php } ?>
 						</div>
 					<?php elseif ( $user->ID != get_current_user_id() ): ?>
