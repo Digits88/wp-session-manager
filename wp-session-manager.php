@@ -206,8 +206,8 @@ class WP_Session_Manager {
 	 */
 	protected function user_session_row( array $session ) {
 		$browser    = $this->get_browser( $session );
-		$ip         = isset( $session['ip-address'] ) ? $session['ip-address'] : __( 'Unknown', 'wpsm' );
-		$started    = isset( $session['started'] ) ? date_i18n( 'd/m/Y H:i:s', $session['started'] ) : __( 'Unknown', 'wpsm' );
+		$ip         = isset( $session['ip'] ) ? $session['ip'] : __( 'Unknown', 'wpsm' );
+		$login      = isset( $session['login'] ) ? date_i18n( 'd/m/Y H:i:s', $session['login'] ) : __( 'Unknown', 'wpsm' );
 		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
 		?>
 		<tr>
@@ -220,7 +220,7 @@ class WP_Session_Manager {
 				}
 			?></td>
 			<td class="col-ip"><?php echo $ip; ?></td>
-			<td class="col-started"><?php echo $started; ?></td>
+			<td class="col-login"><?php echo $login; ?></td>
 			<td class="col-expiration"><?php echo $expiration; ?></td>
 		</tr>
 		<?php
@@ -261,12 +261,12 @@ class WP_Session_Manager {
 	 */
 	public function get_browser( array $session ) {
 
-		if ( !isset( $session['user-agent'] ) or empty( $session['user-agent'] ) ) {
+		if ( empty( $session['ua'] ) ) {
 			return array();
 		}
 
-		if ( isset( $this->bc_cache[$session['user-agent']] ) ) {
-			return $this->bc_cache[$session['user-agent']];
+		if ( isset( $this->bc_cache[$session['ua']] ) ) {
+			return $this->bc_cache[$session['ua']];
 		}
 
 		if ( !isset( $this->bc ) ) {
@@ -276,7 +276,7 @@ class WP_Session_Manager {
 			$this->bc->lowercase = true;
 		}
 
-		return $this->bc_cache[$session['user-agent']] = $this->bc->getBrowser( $session['user-agent'], true );
+		return $this->bc_cache[$session['ua']] = $this->bc->getBrowser( $session['ua'], true );
 
 	}
 
@@ -294,16 +294,16 @@ class WP_Session_Manager {
 
 		// IP address.
 		if ( !empty( $_SERVER['REMOTE_ADDR'] ) ) {
-			$info['ip-address'] = $_SERVER['REMOTE_ADDR'];
+			$info['ip'] = $_SERVER['REMOTE_ADDR'];
 		}
 
 		// User-agent.
 		if ( ! empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
-			$info['user-agent'] = wp_unslash( $_SERVER['HTTP_USER_AGENT'] );
+			$info['ua'] = wp_unslash( $_SERVER['HTTP_USER_AGENT'] );
 		}
 
 		// Timestamp
-		$info['started'] = time();
+		$info['login'] = time();
 
 		return $info;
 	}
