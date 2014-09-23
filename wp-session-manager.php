@@ -50,6 +50,11 @@ class WP_Session_Manager {
 		// Textdomain.
 		add_action( 'init',                            array( $this, 'action_init'                   ) );
 
+		add_action( 'admin_init',                      array( $this, 'admin_init'                   ) );
+
+		// save some recent activity
+		add_action( 'heartbeat_received',              array( $this, 'heartbeat_received'            ) );
+
 		// Profile options.
 		add_action( 'admin_head-profile.php',          array( $this, 'enqueue_scripts_styles'        ) );
 		add_action( 'admin_head-user-edit.php',        array( $this, 'enqueue_scripts_styles'        ) );
@@ -64,13 +69,71 @@ class WP_Session_Manager {
 
 	/**
 	 * Action fired on init. Loads the l10n files.
-	 * 
+	 *
 	 * @since 1.0
 	 * @access public
 	 */
 	public function action_init() {
 		load_plugin_textdomain( 'wpsm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 	}
+
+	/**
+	 * Action fired on heartbeat recieved
+	 *
+	 * Update the last seen information once per hour
+	 *
+	 * @since 1.0
+	 * access public
+	 */
+	public function heartbeat_received( $response ) {
+
+		$update = $this->_maybe_update_last_seen();
+		$response['last_seen_updated'] = $update;
+
+		return $response;
+	}
+
+
+	/**
+	 * Action fired on admin init
+     *
+	 * Update the last seen information once per hour
+	 *
+	 * @since 1.0
+	 * @access public
+	 */
+	public function admin_init() {
+		$this->_maybe_update_last_seen();
+	}
+
+	/**
+	 * Maybe update the last seen time in the current session
+	 *
+	 * If it has been an hour since this session was seen, update
+	 * that information in the session
+	 *
+	 * @since 1.0
+	 * @access private
+	 */
+	private function _maybe_update_last_seen() {
+		$token = wp_get_session_token();
+		$user = get_current_user_id();
+		$manager = WP_Session_Tokens::get_instance( $user );
+		$session = $manager->get( $token );
+
+		$last_seen = isset($session['seen']) ? $session['seen'] : 0 ;
+
+		if ( $last_seen < time() - ( HOUR_IN_SECONDS ) ) {
+			$session['seen'] = time();
+			$manager->update( $token, $session );
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+
 
 	/**
 	 * Enqueue scripts and styles for the profile.php screen.
@@ -142,6 +205,7 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Logged In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Last Seen', 'wpsm' ); ?></th>
 							</tr>
 							</thead>
 							<tbody>
@@ -172,6 +236,7 @@ class WP_Session_Manager {
 								<th scope="col"><?php _e( 'Location', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Logged In', 'wpsm' ); ?></th>
 								<th scope="col"><?php _e( 'Expires', 'wpsm' ); ?></th>
+								<th scope="col"><?php _e( 'Last Seen', 'wpsm' ); ?></th>
 							</tr>
 							</thead>
 							<tbody>
@@ -209,6 +274,12 @@ class WP_Session_Manager {
 		$ip         = isset( $session['ip'] ) ? $session['ip'] : __( 'Unknown', 'wpsm' );
 		$login      = isset( $session['login'] ) ? date_i18n( 'd/m/Y H:i:s', $session['login'] ) : __( 'Unknown', 'wpsm' );
 		$expiration = date_i18n( 'd/m/Y H:i:s', $session['expiration'] );
+
+		add_filter('human_time_diff', array( $this, 'less_human_time_diff' ), 10, 4 );
+		// @TODO: Remove the ternary. There now to avoid notices on old sessions
+		$lastseen = isset($session['seen']) ?  human_time_diff( $session['seen'] ) : 'A long time ago';
+		remove_filter('human_time_diff', array( $this, 'less_human_time_diff' ), 10, 4 );
+
 		?>
 		<tr>
 			<td class="col-device"><span class="<?php echo $this->device_class( $browser ); ?>"></span></td>
@@ -222,6 +293,7 @@ class WP_Session_Manager {
 			<td class="col-ip"><?php echo $ip; ?></td>
 			<td class="col-login"><?php echo $login; ?></td>
 			<td class="col-expiration"><?php echo $expiration; ?></td>
+			<td class="col-lastseen"><?php echo $lastseen; ?></td>
 		</tr>
 		<?php
 	}
@@ -431,6 +503,22 @@ class WP_Session_Manager {
 
 		return $instance;
 
+	}
+
+	/**
+	 * Filters Human Time Diff to be more fuzzy 
+	 *
+	 * @since 1.0
+	 * @access public 
+	 *
+	 */
+	public function less_human_time_diff( $since, $diff, $from, $to ) {
+
+		if ( $diff <= HOUR_IN_SECONDS ) {
+			$since = __( 'This Hour' );
+		}
+
+		return $since;
 	}
 
 }
