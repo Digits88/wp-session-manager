@@ -277,7 +277,7 @@ class WP_Session_Manager {
 
 		add_filter('human_time_diff', array( $this, 'less_human_time_diff' ), 10, 4 );
 		// @TODO: Remove the ternary. There now to avoid notices on old sessions
-		$lastseen = isset($session['seen']) ?  human_time_diff( $session['seen'] ) : 'A long time ago';
+		$lastseen = isset($session['seen']) ?  human_time_diff( $session['seen'] ) : __( 'Unknown', 'wpsm' );
 		remove_filter('human_time_diff', array( $this, 'less_human_time_diff' ), 10, 4 );
 
 		?>
@@ -520,7 +520,7 @@ class WP_Session_Manager {
 	public function less_human_time_diff( $since, $diff, $from, $to ) {
 
 		if ( $diff <= HOUR_IN_SECONDS ) {
-			$since = __( 'This Hour' );
+			$since = __( 'This Hour', 'wpsm' );
 		}
 
 		return $since;
