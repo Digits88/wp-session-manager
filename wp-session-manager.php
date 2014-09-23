@@ -83,16 +83,18 @@ class WP_Session_Manager {
 	 * Update the last seen information once per hour
 	 *
 	 * @since 1.0
-	 * access public
+	 * @access public
+	 *
+	 * @param array $response The response to the Heartbeat request.
+	 * @return array The updated Heartbeat response.
 	 */
-	public function heartbeat_received( $response ) {
+	public function heartbeat_received( array $response ) {
 
 		$update = $this->_maybe_update_last_seen();
 		$response['last_seen_updated'] = $update;
 
 		return $response;
 	}
-
 
 	/**
 	 * Action fired on admin init
@@ -132,8 +134,6 @@ class WP_Session_Manager {
 		}
 
 	}
-
-
 
 	/**
 	 * Enqueue scripts and styles for the profile.php screen.
@@ -509,8 +509,13 @@ class WP_Session_Manager {
 	 * Filters Human Time Diff to be more fuzzy 
 	 *
 	 * @since 1.0
-	 * @access public 
-	 *
+	 * @access public
+	 * 
+	 * @param string $since The difference in human readable text.
+	 * @param int    $diff  The difference in seconds.
+	 * @param int    $from  Unix timestamp from which the difference begins.
+	 * @param int    $to    Unix timestamp to end the time difference.
+	 * @return string       The difference in human readable text.
 	 */
 	public function less_human_time_diff( $since, $diff, $from, $to ) {
 
