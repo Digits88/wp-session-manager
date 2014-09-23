@@ -118,9 +118,8 @@ class WP_Session_Manager {
 	 * @access private
 	 */
 	private function _maybe_update_last_seen() {
-		$token = wp_get_session_token();
-		$user = get_current_user_id();
-		$manager = WP_Session_Tokens::get_instance( $user );
+		$token   = wp_get_session_token();
+		$manager = $this->get_session_manager( wp_get_current_user() );
 		$session = $manager->get( $token );
 
 		$last_seen = isset($session['seen']) ? $session['seen'] : 0 ;
