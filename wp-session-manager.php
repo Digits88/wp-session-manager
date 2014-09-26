@@ -3,21 +3,21 @@
  * Plugin Name: WP Session Manager
  * Author: Drew Jaynes & John Blackbourn
  * Description: Adds controls to a user's profile screen for managing their logged-in sessions.
- * Version: 1.0
+ * Version: 1000.0
  * License: GPLv2
  */
 
 /**
  * Class WP_Session_Manager
  *
- * @since 1.0
+ * @since 1000.0
  */
 class WP_Session_Manager {
 
 	/**
 	 * Array of user session managers.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access protected
 	 * @var WP_Session_Tokens[]
 	 */
@@ -26,7 +26,7 @@ class WP_Session_Manager {
 	/**
 	 * The Browscap instance.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access protected
 	 * @var Browscap
 	 */
@@ -35,7 +35,7 @@ class WP_Session_Manager {
 	/**
 	 * Array of cached Browscap browser data.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access protected
 	 * @var array
 	 */
@@ -70,7 +70,7 @@ class WP_Session_Manager {
 	/**
 	 * Action fired on init. Loads the l10n files.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
 	 */
 	public function action_init() {
@@ -82,7 +82,7 @@ class WP_Session_Manager {
 	 *
 	 * Update the last seen information once per hour
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
 	 *
 	 * @param array $response The response to the Heartbeat request.
@@ -101,7 +101,7 @@ class WP_Session_Manager {
      *
 	 * Update the last seen information once per hour
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
 	 */
 	public function admin_init() {
@@ -114,7 +114,7 @@ class WP_Session_Manager {
 	 * If it has been an hour since this session was seen, update
 	 * that information in the session
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access private
 	 */
 	private function _maybe_update_last_seen() {
@@ -137,7 +137,7 @@ class WP_Session_Manager {
 	/**
 	 * Enqueue scripts and styles for the profile.php screen.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 *
 	 * @access public
 	 */
@@ -165,7 +165,7 @@ class WP_Session_Manager {
 	/**
 	 * Handle outputting the session manager options to the user profile screen.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 *
 	 * @access public
 	 *
@@ -263,7 +263,7 @@ class WP_Session_Manager {
 	/**
 	 * Output a table row for a user session list table.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access protected
 	 *
 	 * @param  array   $session       The session data.
@@ -300,7 +300,7 @@ class WP_Session_Manager {
 	/**
 	 * Return a class name for the current browser information. Used to display a dashicon on each table row.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
 	 *
 	 * @param  array  $browser The browser information returned by `Browscap::getBrowser()`.
@@ -324,7 +324,7 @@ class WP_Session_Manager {
 	 * Return browser information for the given session.
 	 *
 	 * @see Browscap::getBrowser()
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
 	 *
 	 * @param  array  $session The session data.
@@ -354,7 +354,7 @@ class WP_Session_Manager {
 	/**
 	 * Collect and store additional session information.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 *
 	 * @access public
 	 *
@@ -382,7 +382,7 @@ class WP_Session_Manager {
 	/**
 	 * Get a session manager object for the given user.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 *
 	 * @access protected
 	 *
@@ -401,7 +401,7 @@ class WP_Session_Manager {
 	/**
 	 * AJAX handler for destroying multiple open sessions for the current user.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 *
 	 * @access public
 	 */
@@ -433,7 +433,7 @@ class WP_Session_Manager {
 	 *
 	 * All of the user's session will be destroyed except the session matching `$token_to_keep`, if present.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
 	 *
 	 * @param  WP_User $user          The user object.
@@ -454,7 +454,7 @@ class WP_Session_Manager {
 	/**
 	 * Check the AJAX request for validity and permissions, and return the corresponding user.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access private
 	 *
 	 * @param  string $action   The nonce action.
@@ -487,7 +487,7 @@ class WP_Session_Manager {
 	/**
 	 * Singleton getter.
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 *
 	 * @access public
 	 *
@@ -505,11 +505,11 @@ class WP_Session_Manager {
 	}
 
 	/**
-	 * Filters Human Time Diff to be more fuzzy 
+	 * Filters Human Time Diff to be more fuzzy
 	 *
-	 * @since 1.0
+	 * @since 1000.0
 	 * @access public
-	 * 
+	 *
 	 * @param string $since The difference in human readable text.
 	 * @param int    $diff  The difference in seconds.
 	 * @param int    $from  Unix timestamp from which the difference begins.

@@ -1,11 +1,11 @@
 # WP Session Manager #
 
-**Contributors:** DrewAPicture, johnbillion  
-**Tags:** users, sessions  
-**Requires at least:** 4.0  
-**Tested up to:** 4.0  
-**Stable tag:** 1.0  
-**License:** GPL v2 or later  
+**Contributors:** DrewAPicture, johnbillion
+**Tags:** users, sessions
+**Requires at least:** 4.0
+**Tested up to:** 4.0
+**Stable tag:** 1000.0
+**License:** GPL v2 or later
 
 Adds controls to the user profile screen and user editing screen for managing logged-in sessions.
 
