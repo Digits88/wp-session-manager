@@ -75,10 +75,18 @@ class WP_Session_Manager_CLI extends WP_CLI_Command {
 	function seed( $args, $assoc_args ){
 		require_once( ABSPATH . WPINC . '/session.php' );
 		add_filter( 'attach_session_information',      array( $this, '_filter_collected_session_info' ), 20 );
-		$users = get_users( );
 
-		foreach( $users as $user ) {
-			$this->make_alot_of_sessions( $user );
+		$count = isset( $assoc_args['count'] ) ? (int) $assoc_args['count'] : null;
+
+		if ( isset( $assoc_args['user_id'])  ){
+			$user = get_user_by( 'id', $assoc_args['user_id'] );
+			$this->make_alot_of_sessions( $user, $count );
+		} else {
+			$users = get_users( );
+
+			foreach( $users as $user ) {
+				$this->make_alot_of_sessions( $user, $count );
+			}
 		}
 
 	}
