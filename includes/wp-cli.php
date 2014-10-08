@@ -91,6 +91,31 @@ class WP_Session_Manager_CLI extends WP_CLI_Command {
 
 	}
 
+	/**
+	 * @subcommand reset
+	 */
+
+	function reset_sessions( $args, $assoc_args ){
+		require_once( ABSPATH . WPINC . '/session.php' );
+
+		if ( isset( $assoc_args['user_id'])  ){
+			$user = get_user_by( 'id', $assoc_args['user_id'] );
+			$this->destroy_sessions( $user );
+		} else {
+			$users = get_users( );
+
+			foreach( $users as $user ) {
+				$this->destroy_sessions( $user );
+			}
+		}
+	}
+
+	function destroy_sessions( $user ) {
+		$manager = WP_User_Meta_Session_Tokens::get_instance( $user->ID );	
+		$manager->destroy_all();
+		WP_CLI::line( 'Destroyed all sessions for user ' . $user->ID );
+
+	}
 	function make_alot_of_sessions( $user, $count = null ){
 		$i = 0;
 		if ( null === $count ){
