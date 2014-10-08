@@ -83,9 +83,15 @@ class WP_Session_Manager_CLI extends WP_CLI_Command {
 
 	}
 
-	function make_alot_of_sessions( $user ){
+	function make_alot_of_sessions( $user, $count = null ){
 		$i = 0;
-		$count = 10;
+		if ( null === $count ){
+			$count = rand(0,3);
+		}
+		if ( 0 === $count ){
+			return;
+		}
+
 		while ( $i < $count ) {
 			$manager = WP_User_Meta_Session_Tokens::get_instance( $user->ID );	
 			$expiration = strtotime( $this->expires[ array_rand( $this->expires ) ] );
