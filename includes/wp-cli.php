@@ -90,9 +90,10 @@ class WP_Session_Manager_CLI extends WP_CLI_Command {
 			$manager = WP_User_Meta_Session_Tokens::get_instance( $user->ID );	
 			$expiration = strtotime( $this->expires[ array_rand( $this->expires ) ] );
 			$manager->create( $expiration );	
+
+			$i++;
 			
 			WP_CLI::line( 'Session ' . $i . ' added for user ' . $user->ID );
-			$i++;
 		}
 	}
 
